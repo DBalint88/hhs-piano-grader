@@ -2,6 +2,36 @@ table {
     width: 100%;
     border-collapse: collapse;
 }
-table, th, td {
-    border: 1px solid black
+
+tr {
+    border: 1px solid white;
+}
+
+* {
+    box-sizing: border-box;
+    background-color: black;
+    color: white;
+}
+
+td {
+    vertical-align: middle;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+form {
+    display: inline;
+    margin: 0;
+}
+
+.center-align {
+    text-align: center;
+}
+
+.left-align {
+    text-align: left;
+}
+
+.right-align {
+    text-align: right;
 }
