@@ -13,6 +13,17 @@ const firebaseConfig = {
     appId: "1:324874631780:web:920145268e3c34c16a7d71"
 };
 
+/*
+TO-DO: 
+
+Build out Undo function.  That should be it.
+
+
+*/
+
+
+
+
 initializeApp(firebaseConfig)
 const db = getFirestore()
 const subsRef = collection(db, 'submissions')
