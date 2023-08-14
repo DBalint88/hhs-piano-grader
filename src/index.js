@@ -18,29 +18,44 @@ const db = getFirestore()
 const subsRef = collection(db, 'submissions')
 
 let submissions = []
+let resolved = []
+
 const q = query(subsRef, where("resolved", "==", false), orderBy('lastName', 'desc'), orderBy('timeStamp', 'asc'))
+const z = query(subsRef, where("resolved", "==", true), orderBy('fbTimeStamp', 'desc'))
+
 onSnapshot(q, (snapshot) => {
+
+    // reset local data & DOM
     submissions = []
+    while (unresolvedRecordWrapper.children.length > 1) {
+        unresolvedRecordWrapper.removeChild(unresolvedRecordWrapper.lastChild)
+    }
+
     snapshot.docs.forEach((submission) => {
         submissions.push({ ...submission.data(), id: submission.id })
     })
-    buildList()
-    console.log(submissions)
+
+    buildActiveList()
+})
+
+onSnapshot(z, (snapshot) => {
+    resolved = []
+    snapshot.docs.forEach((resolvedSub) => {
+        resolved.push({ ...resolvedSub.data(), id: resolvedSub.id })
+    })
+    buildResolvedList()
 })
 
 
 
 const unresolvedRecordWrapper = document.getElementById("unresolved-record-wrapper")
+const resolvedRecordWrapper = document.getElementById("resolved-record-wrapper")
 
-function buildList() {
-
-
-    while (unresolvedRecordWrapper.children.length > 1) {
-        unresolvedRecordWrapper.removeChild(unresolvedRecordWrapper.lastChild)
-    }
+function buildActiveList() {
 
     for (let i = 0; i < submissions.length; i++) {
         const sub = submissions[i];
+
         let record = document.createElement('tr')
 
         let timeStamp = document.createElement('td')
@@ -125,10 +140,77 @@ function buildList() {
         record.appendChild(songTitle)
         record.appendChild(pointValue)
         record.appendChild(gradeFormCell)
+    }
+}
 
+function buildResolvedList() {
+
+    while (resolvedRecordWrapper.children.length > 1) {
+        resolvedRecordWrapper.removeChild(resolvedRecordWrapper.lastChild)
+    }
+
+    for (let i = 0; i < resolved.length; i++) {
         
+        const sub = resolved[i];
+
+        let record = document.createElement('tr')
+
+        let timeStamp = document.createElement('td')
+        timeStamp.textContent = sub.timeStamp.toDate().toLocaleDateString('en-us', { weekday: "short", month: "short", day: "numeric"  })
+        timeStamp.classList.add("center-align")
+
+        let week = document.createElement('td')
+        week.textContent = sub.week
+        week.classList.add("center-align")
+
+        let lastName = document.createElement('td')
+        lastName.textContent = sub.lastName
+        lastName.classList.add("left-align")
+
+        let firstName = document.createElement('td')
+        firstName.textContent = sub.firstName
+        firstName.classList.add("left-align")
+
+        let songLevel = document.createElement('td')
+        songLevel.textContent = sub.songLevel
+        songLevel.classList.add("center-align")
+
+        let songSeq = document.createElement('td')
+        songSeq.textContent = sub.songSeq
+        songSeq.classList.add("center-align")
+
+        let songTitle = document.createElement('td')
+        songTitle.textContent = sub.songTitle
+        songTitle.classList.add("center-align")
         
-        
+        let pointValue = document.createElement('td')
+        pointValue.textContent = sub.pointValue
+        pointValue.classList.add("center-align")
+
+        let gradeFormCell = document.createElement('td')
+        gradeFormCell.classList.add("center-align")
+        let gradeForm = document.createElement('form')
+
+        let undoButton = document.createElement('button')
+        undoButton.textContent = "Undo"
+        undoButton.addEventListener("click", (event) => {
+            undoFeedback(event, sub.id, sub.songfbRef, sub.userID)
+        })
+
+        gradeForm.appendChild(undoButton)
+        gradeFormCell.appendChild(gradeForm)
+
+
+        resolvedRecordWrapper.appendChild(record)
+        record.appendChild(timeStamp)
+        record.appendChild(week)
+        record.appendChild(lastName)
+        record.appendChild(firstName)
+        record.appendChild(songLevel)
+        record.appendChild(songSeq)
+        record.appendChild(songTitle)
+        record.appendChild(pointValue)
+        record.appendChild(gradeFormCell)
     }
 }
 
