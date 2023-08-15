@@ -51,8 +51,11 @@ onSnapshot(q, (snapshot) => {
 
 onSnapshot(z, (snapshot) => {
     resolved = []
+    while (resolvedRecordWrapper.children.length > 1) {
+        resolvedRecordWrapper.removeChild(resolvedRecordWrapper.lastChild)
+    }
     snapshot.docs.forEach((resolvedSub) => {
-        resolved.push({ ...resolvedSub.data(), id: resolvedSub.id })
+        resolved.push({ ...resolvedSub.data({ serverTimestamps: 'estimate' }), id: resolvedSub.id })
     })
     buildResolvedList()
 })
@@ -154,11 +157,7 @@ function buildActiveList() {
     }
 }
 
-function buildResolvedList() {
-
-    while (resolvedRecordWrapper.children.length > 1) {
-        resolvedRecordWrapper.removeChild(resolvedRecordWrapper.lastChild)
-    }
+async function buildResolvedList() {
 
     for (let i = 0; i < resolved.length; i++) {
         
@@ -167,8 +166,21 @@ function buildResolvedList() {
         let record = document.createElement('tr')
 
         let timeStamp = document.createElement('td')
-        timeStamp.textContent = sub.timeStamp.toDate().toLocaleDateString('en-us', { weekday: "short", month: "short", day: "numeric"  })
+        timeStamp.textContent = sub.timeStamp.toDate().toLocaleDateString('en-us', { weekday: "short", month: "short", day: "numeric" })
         timeStamp.classList.add("center-align")
+
+        let resolvedTimeStamp = document.createElement('td')
+        resolvedTimeStamp.textContent = sub.fbTimeStamp.toDate().toLocaleDateString('en-us', { weekday: "short", month: "short", day: "numeric" })
+        resolvedTimeStamp.classList.add("center-align")
+
+        let result = document.createElement('td')
+        result.textContent = sub.result.toUpperCase()
+        if (sub.result == 'pass') {
+            result.style.backgroundColor = 'darkgreen'
+        } else if (sub.result == 'fail') {
+            result.style.backgroundColor = 'darkred'
+        }
+        result.classList.add("center-align")
 
         let week = document.createElement('td')
         week.textContent = sub.week
@@ -205,7 +217,8 @@ function buildResolvedList() {
         let undoButton = document.createElement('button')
         undoButton.textContent = "Undo"
         undoButton.addEventListener("click", (event) => {
-            undoFeedback(event, sub.id, sub.songfbRef, sub.userID)
+            event.preventDefault()
+            undoFeedback(sub.id, sub.songfbRef, sub.userID, sub.result)
         })
 
         gradeForm.appendChild(undoButton)
@@ -214,6 +227,8 @@ function buildResolvedList() {
 
         resolvedRecordWrapper.appendChild(record)
         record.appendChild(timeStamp)
+        record.appendChild(resolvedTimeStamp)
+        record.appendChild(result)
         record.appendChild(week)
         record.appendChild(lastName)
         record.appendChild(firstName)
@@ -225,6 +240,43 @@ function buildResolvedList() {
     }
 }
 
+async function undoFeedback(subID, songID, userID, result) {
+    // Undo function is tricky.  It needs to "know" what happened to each record to undo it.  Separate parameter?
+    // Basically, if the song was Failed, it needs to be un-failed.  Pull down failedSongs, remove this one, re-upload.
+    // Also, update the submission status "resolved" = false
+    // If the song was Passed, it needs to be un-passed.  Pull down completedSongs, remove this one, re-upload.
+    // In either case, the songID needs to be added back to pendingSongs.
+    // ...AND, the fbTimeStamp field needs to be cleared.
+    // What if a song was previously failed, you marked it completed, and now undo that?  The failure status is lost.
+    // I could query all submissions for the songID and failure status.  
+    // Does it really matter?  It seems like such a corner case.  If I undo feedback, I'm going to immediately re-do it.
+    // In fact, I think it's a non-issue.  Or an even smaller corner than I thought.
+    // I would have to undo the feedback, then they would immediately have to unsubmit the song.  
+    // That's a really unlikely situation, and ultimately inconsequential.
+
+    const userRef = doc(db, 'userProfiles', userID)
+    const subRef = doc(db, 'submissions', subID)
+    let docSnap = await getDoc(userRef)
+    let pendingSongs = docSnap.get("pendingSongs")
+    let completedSongs = docSnap.get("completedSongs")
+    let failedSongs = docSnap.get("failedSongs")
+    pendingSongs.push(songID)
+    if (result == 'pass') {
+        completedSongs.splice(completedSongs.indexOf(songID), 1)
+    }
+    if (result == 'fail') {
+        failedSongs.splice(failedSongs.indexOf(songID), 1)
+    }
+    await updateDoc(userRef, {
+        pendingSongs: pendingSongs,
+        failedSongs: failedSongs,
+        completedSongs: completedSongs
+    })
+    await updateDoc(subRef, {
+        resolved: false,
+        result: ''
+    })
+}
 async function processFeedback(event, subID, songID, userID, value) {
     
     console.log(subID)
@@ -256,7 +308,7 @@ async function processFeedback(event, subID, songID, userID, value) {
         }
         completedSongs.push(songID)
 
-        updateDoc(subRef, {
+        await updateDoc(subRef, {
             resolved: true,
             result: "pass",
             fbTimeStamp: serverTimestamp()
@@ -267,7 +319,7 @@ async function processFeedback(event, subID, songID, userID, value) {
         if (!failedSongs.includes(songID)) {
             failedSongs.push(songID)
         }
-        updateDoc(subRef, {
+        await updateDoc(subRef, {
             resolved: true,
             result: "fail",
             fbTimeStamp: serverTimestamp()
@@ -275,7 +327,7 @@ async function processFeedback(event, subID, songID, userID, value) {
         
     }
 
-    updateDoc(userRef, {
+    await updateDoc(userRef, {
         pendingSongs: pendingSongs,
         failedSongs: failedSongs,
         completedSongs: completedSongs
