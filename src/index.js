@@ -3,6 +3,14 @@ import {
     getFirestore, collection, getDocs, doc, onSnapshot,
     query, where, orderBy, getDoc, updateDoc, serverTimestamp
 } from 'firebase/firestore'
+import { 
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    signOut,
+    onAuthStateChanged
+
+} from 'firebase/auth'
 
 const firebaseConfig = {
     apiKey: "AIzaSyC61HybpprKggSz0hCpkVWXDdCv7SyXHHo",
@@ -28,42 +36,74 @@ initializeApp(firebaseConfig)
 const db = getFirestore()
 const subsRef = collection(db, 'submissions')
 
+const auth = getAuth()
+const provider = new GoogleAuthProvider();
+const loginButton = document.getElementById("login-button")
+
+loginButton.addEventListener('click', () => {
+    signInWithPopup(auth, provider)
+})
+
 let submissions = []
 let resolved = []
 
 const q = query(subsRef, where("resolved", "==", false), orderBy('lastName', 'desc'), orderBy('timeStamp', 'asc'))
 const z = query(subsRef, where("resolved", "==", true), orderBy('fbTimeStamp', 'desc'))
 
-onSnapshot(q, (snapshot) => {
-
-    // reset local data & DOM
-    submissions = []
-    while (unresolvedRecordWrapper.children.length > 1) {
-        unresolvedRecordWrapper.removeChild(unresolvedRecordWrapper.lastChild)
-    }
-
-    snapshot.docs.forEach((submission) => {
-        submissions.push({ ...submission.data(), id: submission.id })
-    })
-
-    buildActiveList()
-})
-
-onSnapshot(z, (snapshot) => {
-    resolved = []
-    while (resolvedRecordWrapper.children.length > 1) {
-        resolvedRecordWrapper.removeChild(resolvedRecordWrapper.lastChild)
-    }
-    snapshot.docs.forEach((resolvedSub) => {
-        resolved.push({ ...resolvedSub.data({ serverTimestamps: 'estimate' }), id: resolvedSub.id })
-    })
-    buildResolvedList()
-})
-
-
-
 const unresolvedRecordWrapper = document.getElementById("unresolved-record-wrapper")
 const resolvedRecordWrapper = document.getElementById("resolved-record-wrapper")
+
+
+onAuthStateChanged(auth, async (user) => {
+    // Logic for when the user logs in. If succesful and profile exists, get userLevel & song arrays 
+    if (user) {
+      loginButton.style.display = 'none'   
+  
+      try {
+        
+        onSnapshot(q, (snapshot) => {
+
+            // reset local data & DOM
+            submissions = []
+            while (unresolvedRecordWrapper.children.length > 1) {
+                unresolvedRecordWrapper.removeChild(unresolvedRecordWrapper.lastChild)
+            }
+        
+            snapshot.docs.forEach((submission) => {
+                submissions.push({ ...submission.data(), id: submission.id })
+            })
+        
+            buildActiveList()
+        })
+        
+        onSnapshot(z, (snapshot) => {
+            resolved = []
+            while (resolvedRecordWrapper.children.length > 1) {
+                resolvedRecordWrapper.removeChild(resolvedRecordWrapper.lastChild)
+            }
+            snapshot.docs.forEach((resolvedSub) => {
+                resolved.push({ ...resolvedSub.data({ serverTimestamps: 'estimate' }), id: resolvedSub.id })
+            })
+            buildResolvedList()
+        })
+        
+      }
+      catch(error) {
+        console.log(error)
+      }
+      
+    } else {
+      console.log('no user logged in')
+      loginButton.style.display = 'block'
+    }
+});
+
+
+
+
+
+
+
 
 function buildActiveList() {
 
