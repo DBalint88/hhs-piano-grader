@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "hhs-piano-grader",
     "public": "dist",
     "ignore": [
       "firebase.json",
