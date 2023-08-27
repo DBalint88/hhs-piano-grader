@@ -339,7 +339,6 @@ async function processFeedback(event, subID, songID, userID, value) {
     const subRef = doc(db, 'submissions', subID)
     let docSnap = await getDoc(userRef);
     let pendingSongs = docSnap.get("pendingSongs")
-    console.log("pendingSongs = ", pendingSongs)
     let completedSongs = docSnap.get("completedSongs")
     let failedSongs = docSnap.get("failedSongs")
     pendingSongs.splice(pendingSongs.indexOf(songID), 1)
