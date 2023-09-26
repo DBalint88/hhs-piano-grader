@@ -21,15 +21,6 @@ const firebaseConfig = {
     appId: "1:324874631780:web:920145268e3c34c16a7d71"
 };
 
-/*
-TO-DO: 
-
-Build out Undo function.  That should be it.
-
-
-*/
-
-
 
 
 initializeApp(firebaseConfig)
@@ -47,8 +38,12 @@ loginButton.addEventListener('click', () => {
 let submissions = []
 let resolved = []
 
+const startDate = new Date('August 27, 2023')
+const todaysDate = new Date()
+const currentWeek = Math.ceil((todaysDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24 * 7))
+
 const q = query(subsRef, where("resolved", "==", false), orderBy('lastName', 'desc'), orderBy('timeStamp', 'asc'))
-const z = query(subsRef, where("resolved", "==", true), orderBy('fbTimeStamp', 'desc'))
+const z = query(subsRef, where("resolved", "==", true), where("week", ">=", (currentWeek-1)), orderBy("week", "desc"), orderBy('fbTimeStamp', 'desc'))
 
 const unresolvedRecordWrapper = document.getElementById("unresolved-record-wrapper")
 const resolvedRecordWrapper = document.getElementById("resolved-record-wrapper")
