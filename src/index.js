@@ -26,10 +26,10 @@ const firebaseConfig = {
 initializeApp(firebaseConfig)
 const db = getFirestore()
 const subsRef = collection(db, 'submissions')
-
 const auth = getAuth()
 const provider = new GoogleAuthProvider();
 const loginButton = document.getElementById("login-button")
+const userID = ""
 
 loginButton.addEventListener('click', () => {
     signInWithPopup(auth, provider)
@@ -38,12 +38,25 @@ loginButton.addEventListener('click', () => {
 let submissions = []
 let resolved = []
 
-const startDate = new Date('August 27, 2023')
+const startDate = new Date('January 28, 2024')
 const todaysDate = new Date()
 const currentWeek = Math.ceil((todaysDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24 * 7))
 
-const q = query(subsRef, where("resolved", "==", false), orderBy('lastName', 'desc'), orderBy('timeStamp', 'asc'))
-const z = query(subsRef, where("resolved", "==", true), where("week", ">=", (currentWeek-1)), orderBy("week", "desc"), orderBy('fbTimeStamp', 'desc'))
+function queryDatabase() {
+    // If it's Balint, query by instructor == "balint"
+    if (userID == 'BJgwfUL5JHNjMed0L9HDJvuiNiw1') {
+        const q = query(subsRef, where("resolved", "==", false), where("instructor", "==", "balint"), orderBy('lastName', 'desc'), orderBy('timeStamp', 'asc'))
+        const z = query(subsRef, where("resolved", "==", true), where("instructor", "==", "balint"), where("week", ">=", (currentWeek-1)), orderBy("week", "desc"), orderBy('fbTimeStamp', 'desc'))
+    }
+
+    // If it's Rossomando, query by instructor == "rossomando"
+    if (userID == 'nwCAcnG387bHMxCCAPDTDsP0vp72') {
+        const q = query(subsRef, where("resolved", "==", false), where("instructor", "==", "rossomando"), orderBy('lastName', 'desc'), orderBy('timeStamp', 'asc'))
+        const z = query(subsRef, where("resolved", "==", true), where("instructor", "==", "rossomando"), where("week", ">=", (currentWeek-1)), orderBy("week", "desc"), orderBy('fbTimeStamp', 'desc'))
+    }
+}
+
+
 
 const unresolvedRecordWrapper = document.getElementById("unresolved-record-wrapper")
 const resolvedRecordWrapper = document.getElementById("resolved-record-wrapper")
@@ -52,7 +65,9 @@ const resolvedRecordWrapper = document.getElementById("resolved-record-wrapper")
 onAuthStateChanged(auth, async (user) => {
     // Logic for when the user logs in. If succesful and profile exists, get userLevel & song arrays 
     if (user) {
-      loginButton.style.display = 'none'   
+      loginButton.style.display = 'none'  
+      userID = user.uid 
+      queryDatabase()
   
       try {
         
