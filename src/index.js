@@ -29,7 +29,7 @@ const subsRef = collection(db, 'submissions')
 const auth = getAuth()
 const provider = new GoogleAuthProvider();
 const loginButton = document.getElementById("login-button")
-const userID = ""
+let userID = ""
 
 loginButton.addEventListener('click', () => {
     signInWithPopup(auth, provider)
