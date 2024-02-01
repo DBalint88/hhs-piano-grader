@@ -42,19 +42,18 @@ const startDate = new Date('January 28, 2024')
 const todaysDate = new Date()
 const currentWeek = Math.ceil((todaysDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24 * 7))
 
-function queryDatabase() {
-    // If it's Balint, query by instructor == "balint"
-    if (userID == 'BJgwfUL5JHNjMed0L9HDJvuiNiw1') {
-        const q = query(subsRef, where("resolved", "==", false), where("instructor", "==", "balint"), orderBy('lastName', 'desc'), orderBy('timeStamp', 'asc'))
-        const z = query(subsRef, where("resolved", "==", true), where("instructor", "==", "balint"), where("week", ">=", (currentWeek-1)), orderBy("week", "desc"), orderBy('fbTimeStamp', 'desc'))
-    }
 
-    // If it's Rossomando, query by instructor == "rossomando"
-    if (userID == 'nwCAcnG387bHMxCCAPDTDsP0vp72') {
-        const q = query(subsRef, where("resolved", "==", false), where("instructor", "==", "rossomando"), orderBy('lastName', 'desc'), orderBy('timeStamp', 'asc'))
-        const z = query(subsRef, where("resolved", "==", true), where("instructor", "==", "rossomando"), where("week", ">=", (currentWeek-1)), orderBy("week", "desc"), orderBy('fbTimeStamp', 'desc'))
-    }
-}
+// If it's Balint, query by instructor == "balint"
+
+const a = query(subsRef, where("resolved", "==", false), where("instructor", "==", "balint"), orderBy('lastName', 'desc'), orderBy('timeStamp', 'asc'))
+const b = query(subsRef, where("resolved", "==", true), where("instructor", "==", "balint"), where("week", ">=", (currentWeek-1)), orderBy("week", "desc"), orderBy('fbTimeStamp', 'desc'))
+
+
+// If it's Rossomando, query by instructor == "rossomando"
+
+const c = query(subsRef, where("resolved", "==", false), where("instructor", "==", "rossomando"), orderBy('lastName', 'desc'), orderBy('timeStamp', 'asc'))
+const d = query(subsRef, where("resolved", "==", true), where("instructor", "==", "rossomando"), where("week", ">=", (currentWeek-1)), orderBy("week", "desc"), orderBy('fbTimeStamp', 'desc'))
+
 
 
 
@@ -67,36 +66,70 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
       loginButton.style.display = 'none'  
       userID = user.uid 
-      queryDatabase()
   
       try {
-        
-        onSnapshot(q, (snapshot) => {
 
-            // reset local data & DOM
-            submissions = []
-            while (unresolvedRecordWrapper.children.length > 1) {
-                unresolvedRecordWrapper.removeChild(unresolvedRecordWrapper.lastChild)
-            }
-        
-            snapshot.docs.forEach((submission) => {
-                submissions.push({ ...submission.data(), id: submission.id })
+        // If it's Balint's uID, use query "a" for unresolved submissions and "b" for resolved submissions.
+        if (userID == 'BJgwfUL5JHNjMed0L9HDJvuiNiw1') {
+            onSnapshot(a, (snapshot) => {
+
+                // reset local data & DOM
+                submissions = []
+                while (unresolvedRecordWrapper.children.length > 1) {
+                    unresolvedRecordWrapper.removeChild(unresolvedRecordWrapper.lastChild)
+                }
+            
+                snapshot.docs.forEach((submission) => {
+                    submissions.push({ ...submission.data(), id: submission.id })
+                })
+            
+                buildActiveList()
             })
-        
-            buildActiveList()
-        })
-        
-        onSnapshot(z, (snapshot) => {
-            resolved = []
-            while (resolvedRecordWrapper.children.length > 1) {
-                resolvedRecordWrapper.removeChild(resolvedRecordWrapper.lastChild)
-            }
-            snapshot.docs.forEach((resolvedSub) => {
-                resolved.push({ ...resolvedSub.data({ serverTimestamps: 'estimate' }), id: resolvedSub.id })
+            
+            onSnapshot(b, (snapshot) => {
+                resolved = []
+                while (resolvedRecordWrapper.children.length > 1) {
+                    resolvedRecordWrapper.removeChild(resolvedRecordWrapper.lastChild)
+                }
+                snapshot.docs.forEach((resolvedSub) => {
+                    resolved.push({ ...resolvedSub.data({ serverTimestamps: 'estimate' }), id: resolvedSub.id })
+                })
+                buildResolvedList()
             })
-            buildResolvedList()
-        })
+        }
         
+        
+        // If it's Rossomando's uID, use query "c" for unresolved submissions and "d" for resolved submissions.
+        if (userID == 'nwCAcnG387bHMxCCAPDTDsP0vp72') { 
+            onSnapshot(c, (snapshot) => {
+
+                // reset local data & DOM
+                submissions = []
+                while (unresolvedRecordWrapper.children.length > 1) {
+                    unresolvedRecordWrapper.removeChild(unresolvedRecordWrapper.lastChild)
+                }
+            
+                snapshot.docs.forEach((submission) => {
+                    submissions.push({ ...submission.data(), id: submission.id })
+                })
+            
+                buildActiveList()
+            })
+            
+            onSnapshot(d, (snapshot) => {
+                resolved = []
+                while (resolvedRecordWrapper.children.length > 1) {
+                    resolvedRecordWrapper.removeChild(resolvedRecordWrapper.lastChild)
+                }
+                snapshot.docs.forEach((resolvedSub) => {
+                    resolved.push({ ...resolvedSub.data({ serverTimestamps: 'estimate' }), id: resolvedSub.id })
+                })
+                buildResolvedList()
+            })
+
+        }
+
+
       }
       catch(error) {
         console.log(error)
