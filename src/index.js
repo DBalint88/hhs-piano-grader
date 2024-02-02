@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { 
     getFirestore, collection, getDocs, doc, onSnapshot,
-    query, where, orderBy, getDoc, updateDoc, serverTimestamp
+    query, where, orderBy, getDoc, updateDoc, serverTimestamp, Timestamp
 } from 'firebase/firestore'
 import { 
     getAuth,
@@ -38,7 +38,7 @@ loginButton.addEventListener('click', () => {
 let submissions = []
 let resolved = []
 
-const startDate = new Date('January 28, 2024')
+const startDate = new Date('August 27, 2023')
 const todaysDate = new Date()
 const currentWeek = Math.ceil((todaysDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24 * 7))
 
@@ -160,7 +160,7 @@ function buildActiveList() {
         timeStamp.classList.add("center-align")
 
         let week = document.createElement('td')
-        week.textContent = sub.week
+        week.textContent = sub.week - 22
         week.classList.add("center-align")
 
         let lastName = document.createElement('td')
