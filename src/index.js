@@ -160,7 +160,7 @@ function buildActiveList() {
         timeStamp.classList.add("center-align")
 
         let week = document.createElement('td')
-        week.textContent = sub.week - 22
+        week.textContent = sub.week - 52
         week.classList.add("center-align")
 
         let lastName = document.createElement('td')
@@ -266,7 +266,7 @@ async function buildResolvedList() {
         result.classList.add("center-align")
 
         let week = document.createElement('td')
-        week.textContent = sub.week
+        week.textContent = sub.week - 52
         week.classList.add("center-align")
 
         let lastName = document.createElement('td')
