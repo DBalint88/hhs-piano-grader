@@ -69,8 +69,8 @@ onAuthStateChanged(auth, async (user) => {
   
       try {
 
-        // If it's Balint's uID, use query "a" for unresolved submissions and "b" for resolved submissions.
-        if (userID == 'BJgwfUL5JHNjMed0L9HDJvuiNiw1') {
+        // If it's Crebbin's uID, use query "a" for unresolved submissions and "b" for resolved submissions.
+        if (userID == 'ESnyLlzkpJRWxs53bxyPydxqerV2') {
             onSnapshot(a, (snapshot) => {
 
                 // reset local data & DOM
